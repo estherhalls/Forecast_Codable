@@ -18,25 +18,44 @@ class DayDetailsViewController: UIViewController {
     @IBOutlet weak var currentDescriptionLabel: UILabel!
     
     //MARK: - Properties
+    // Placeholder Property
+    var days: [Day] = []
+    //    var forecastData: TopLevelDictionary?
     
     //MARK: - View Lifecyle
     override func viewDidLoad() {
         super.viewDidLoad()
+        /// Array assignment is using closure to pass in the data
+        NetworkController.fetchDays { forecastData in
+            /// Unwrap the property
+            guard let forecastData = forecastData else { return }
+            /// Grand Central Dispatch responsible for concurrency
+            DispatchQueue.main.async {
+                /// Reference self when in closure
+                self.days = forecastData
+                self.tableView.reloadData()
+                updateViews()
+            }
+        }
     }
     
+    // Helper Function:
     func updateViews() {
-    
+        guard let forecastData = forecastData else { return }
+        cityNameLabel.text = forecastData.cityName
+        
     }
 }
 
-//MARK: - Extenstions
+//MARK: - Extensions
 extension DayDetailsViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 44
+        return days.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "dayCell", for: indexPath) as? DayForcastTableViewCell else {return UITableViewCell()}
+        let day = days[indexPath.row]
         
         return cell
     }

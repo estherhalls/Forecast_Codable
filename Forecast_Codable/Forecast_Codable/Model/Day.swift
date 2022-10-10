@@ -12,6 +12,7 @@ struct TopLevelDictionary: Decodable {
         case cityName = "city_name"
         case days = "data"
     }
+    
     let cityName: String
     let days: [Day]
     
@@ -25,6 +26,7 @@ struct Day: Decodable {
         case validDate = "valid_date"
         case weather
     }
+    
     let temp: Double
     let highTemp: Double
     let lowTemp: Double
