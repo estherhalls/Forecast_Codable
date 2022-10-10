@@ -21,7 +21,7 @@ class NetworkController {
     
     
     // MARK: - Helper Functions: (Fetch)
-    static func fetchDays(completion: @escaping ([Day]?) -> Void) {
+    static func fetchDays(completion: @escaping (TopLevelDictionary?) -> Void) {
         // Step One: Create URL
         guard let baseURL = URL(string: baseURLString) else {completion(nil); return}
         let forecastURL = baseURL.appendingPathComponent(kForecastComponent)
@@ -31,25 +31,28 @@ class NetworkController {
         // Query Item:
         let keyQuery = URLQueryItem(name: kAPIKeyKey, value: kAPIKeyValue)
         let cityQuery = URLQueryItem(name: kCityNameKey, value: kCityNameValue)
-        urlComponents?.queryItems = [keyQuery, cityQuery]
+        let unitsQuery = URLQueryItem(name: "units", value: "I")
+        urlComponents?.queryItems = [keyQuery, cityQuery, unitsQuery]
         
-        guard let finalURL = urlComponents?.url else { completion(nil); return }
-        
+        guard let finalURL = urlComponents?.url else { return }
         print (finalURL)
         
         // Step Two: Start Data Task to Retrieve Data
         URLSession.shared.dataTask(with: finalURL) { dTaskData, _, error in
             if let error {
                 print("There was an error with the data task", error.localizedDescription)
+                completion(nil); return
             }
             // Check for Data
-            guard let data = dTaskData else { completion(nil); return }
+            guard let data = dTaskData else {
+                print("There was an error checking for data")
+                completion(nil); return
+            }
             // Do/Try/Catch
             do {
-                let forecastData = try JSONDecoder().decode(TopLevelDictionary.self, from: data)
-                completion(forecastData.days)
-            }
-            catch {
+                let topLevelDictionary = try JSONDecoder().decode(TopLevelDictionary.self, from: data)
+                completion(topLevelDictionary)
+            } catch {
                 print("Error in Do/Try/Catch: \(error.localizedDescription)")
                 completion(nil); return
             }

@@ -20,30 +20,41 @@ class DayDetailsViewController: UIViewController {
     //MARK: - Properties
     // Placeholder Property
     var days: [Day] = []
-    //    var forecastData: TopLevelDictionary?
+    var forecastData: TopLevelDictionary?
     
     //MARK: - View Lifecyle
+    func setupTable(){
+        dayForcastTableView.delegate = self
+        dayForcastTableView.dataSource = self
+    }
+   
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTable()
         /// Array assignment is using closure to pass in the data
         NetworkController.fetchDays { forecastData in
             /// Unwrap the property
             guard let forecastData = forecastData else { return }
+            self.forecastData = forecastData
+            self.days = forecastData.days
             /// Grand Central Dispatch responsible for concurrency
             DispatchQueue.main.async {
                 /// Reference self when in closure
-                self.days = forecastData
-                self.tableView.reloadData()
-                updateViews()
+                self.updateViews()
             }
         }
     }
     
     // Helper Function:
     func updateViews() {
-        guard let forecastData = forecastData else { return }
-        cityNameLabel.text = forecastData.cityName
-        
+        let day = days[0]
+        cityNameLabel.text = forecastData?.cityName
+        currentTempLabel.text = "\(day.temp)F"
+        currentHighLabel.text = "\(day.highTemp)F"
+        currentLowLabel.text = "\(day.lowTemp)F"
+        currentDescriptionLabel.text = day.weather.description
+        // Because this is involved in updating views
+        self.dayForcastTableView.reloadData()
     }
 }
 
@@ -56,7 +67,7 @@ extension DayDetailsViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "dayCell", for: indexPath) as? DayForcastTableViewCell else {return UITableViewCell()}
         let day = days[indexPath.row]
-        
+        cell.updateViews(day: day)
         return cell
     }
 }
